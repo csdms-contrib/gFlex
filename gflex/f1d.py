@@ -1,4 +1,23 @@
-from __future__ import division # No automatic floor division
+"""
+This file is part of gFlex.
+gFlex computes lithospheric flexural isostasy with heterogeneous rigidity
+Copyright (C) 2010-2018 Andrew D. Wickert
+
+gFlex is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+gFlex is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with gFlex.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+from __future__ import division, print_function # No automatic floor division
 from base import *
 from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve, isolve
@@ -7,7 +26,7 @@ class F1D(Flexure):
   def initialize(self, filename=None):
     self.dimension = 1 # Set it here in case it wasn't set for selection before
     super(F1D, self).initialize()
-    if self.Verbose: print 'F1D initialized'
+    if self.Verbose: print("F1D initialized")
 
   def run(self):
     self.bc_check()
@@ -32,12 +51,12 @@ class F1D(Flexure):
     else:
       sys.exit('Error: method must be "FD", "FFT", "SAS", or "SAS_NG"')
 
-    if self.Verbose: print 'F1D run'
+    if self.Verbose: print("F1D run")
     self.method_func()
 
     self.time_to_solve = time.time() - self.solver_start_time
     if self.Quiet == False:
-      print 'Time to solve [s]:', self.time_to_solve
+      print("Time to solve [s]:", self.time_to_solve)
 
   def finalize(self):
     # If elastic thickness has been padded, return it to its original
@@ -47,7 +66,7 @@ class F1D(Flexure):
       self.Te = self.Te_unpadded
     except:
       pass
-    if self.Verbose: print 'F1D finalized'
+    if self.Verbose: print("F1D finalized")
     super(F1D, self).finalize()   
     
   ########################################
@@ -128,14 +147,14 @@ class F1D(Flexure):
     self.w = np.zeros(self.xw.shape)
 
     if self.Debug:
-      print "w = "
-      print self.w.shape
+      print("w = ")
+      print(self.w.shape)
     
     for i in range(len(self.q)):
       # More efficient if we have created some 0-load points
       # (e.g., for where we want output)
       if self.q[i] != 0:
-        dist = np.abs(self.xw - self._x_local[i])
+        dist = np.abs(self.xw - self.x[i])
         self.w -= self.q[i] * self.coeff * np.exp(-dist/self.alpha) * \
           ( np.cos(dist/self.alpha) + np.sin(dist/self.alpha) )
 
@@ -162,8 +181,8 @@ class F1D(Flexure):
     # Zeroth, start the timer and print the boundary conditions to the screen
     self.coeff_start_time = time.time()
     if self.Verbose:
-      print "Boundary condition, West:", self.BC_W, type(self.BC_W)
-      print "Boundary condition, East:", self.BC_E, type(self.BC_E)
+      print("Boundary condition, West:", self.BC_W, type(self.BC_W))
+      print("Boundary condition, East:", self.BC_E, type(self.BC_E))
 
     # First, set flexural rigidity boundary conditions to flesh out this padded
     # array
@@ -182,7 +201,7 @@ class F1D(Flexure):
     # Finally, compute the total time this process took    
     self.coeff_creation_time = time.time() - self.coeff_start_time
     if self.Quiet == False:
-      print 'Time to construct coefficient (operator) array [s]:', self.coeff_creation_time
+      print("Time to construct coefficient (operator) array [s]:", self.coeff_creation_time)
 
   def BC_Rigidity(self):
     """
@@ -302,8 +321,8 @@ class F1D(Flexure):
     # http://scicomp.stackexchange.com/questions/7175/trouble-implementing-neumann-boundary-conditions-because-the-ghost-points-cannot
     
     if self.Verbose:
-      print "Boundary condition, West:", self.BC_W, type(self.BC_W)
-      print "Boundary condition, East:", self.BC_E, type(self.BC_E)
+      print("Boundary condition, West:", self.BC_W, type(self.BC_W))
+      print("Boundary condition, East:", self.BC_E, type(self.BC_E))
 
     # In 2D, these are handled inside the function; in 1D, there are separate
     # defined functions. Keeping these due to inertia and fear of cut/paste
@@ -568,27 +587,27 @@ class F1D(Flexure):
     """
     
     if self.Debug:
-      print 'qs', self.qs.shape
-      print 'Te', self.Te.shape
+      print("qs", self.qs.shape)
+      print("Te", self.Te.shape)
       self.calc_max_flexural_wavelength()
-      print 'maxFlexuralWavelength_ncells', self.maxFlexuralWavelength_ncells
+      print("maxFlexuralWavelength_ncells', self.maxFlexuralWavelength_ncells")
     
     if self.Solver == "iterative" or self.Solver == "Iterative":
       if self.Debug:
-        print "Using generalized minimal residual method for iterative solution"
+        print("Using generalized minimal residual method for iterative solution")
       if self.Verbose:
-        print "Converging to a tolerance of", self.iterative_ConvergenceTolerance, "m between iterations"
+        print("Converging to a tolerance of", self.iterative_ConvergenceTolerance, "m between iterations")
       # qs negative so bends down with positive load, bends up with neative load 
       # (i.e. material removed)
       w = isolve.lgmres(self.coeff_matrix, -self.qs, tol=self.iterative_ConvergenceTolerance)  
       self.w = w[0] # Reach into tuple to get my array back
     else:
-      if self.Solver == "direct" or self.Solver == "Direct":
+      if self.Solver == 'direct' or self.Solver == 'Direct':
         if self.Debug:
-          print "Using direct solution with UMFpack"
+          print("Using direct solution with UMFpack")
       else:
-        print "Solution type not understood:"
-        print "Defaulting to direct solution with UMFpack"
+        print("Solution type not understood:")
+        print("Defaulting to direct solution with UMFpack")
       # UMFpack is now the default, but setting true just to be sure in case
       # anything changes
       # qs negative so bends down with positive load, bends up with neative load 
@@ -596,8 +615,8 @@ class F1D(Flexure):
       self.w = spsolve(self.coeff_matrix, -self.qs, use_umfpack=True)
     
     if self.Debug:
-      print "w.shape:"
-      print self.w.shape
-      print "w:"
-      print self.w
+      print("w.shape:")
+      print(self.w.shape)
+      print("w:")
+      print(self.w)
     

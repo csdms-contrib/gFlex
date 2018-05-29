@@ -1,4 +1,23 @@
-from __future__ import division # No automatic floor division
+"""
+This file is part of gFlex.
+gFlex computes lithospheric flexural isostasy with heterogeneous rigidity
+Copyright (C) 2010-2018 Andrew D. Wickert
+
+gFlex is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+gFlex is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with gFlex.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+from __future__ import division, print_function # No automatic floor division
 from base import *
 import scipy
 from scipy.special import kei
@@ -10,7 +29,7 @@ class F2D(Flexure):
   def initialize(self, filename=None):
     self.dimension = 2 # Set it here in case it wasn't set for selection before
     super(F2D, self).initialize()
-    if self.Verbose: print 'F2D initialized'
+    if self.Verbose: print("F2D initialized")
 
   def run(self):
     self.bc_check()
@@ -36,12 +55,12 @@ class F2D(Flexure):
     else:
       sys.exit('Error: method must be "FD", "FFT", "SAS", or "SAS_NG"')
 
-    if self.Verbose: print 'F2D run'
+    if self.Verbose: print("F2D run")
     self.method_func()
 
     self.time_to_solve = time.time() - self.solver_start_time
     if self.Quiet == False:
-      print 'Time to solve [s]:', self.time_to_solve
+      print("Time to solve [s]:", self.time_to_solve)
 
   def finalize(self):
     # If elastic thickness has been padded, return it to its original
@@ -51,7 +70,7 @@ class F2D(Flexure):
       self.Te = self.Te_unpadded
     except:
       pass
-    if self.Verbose: print 'F2D finalized'
+    if self.Verbose: print("F2D finalized")
     super(F2D, self).finalize()
     
   ########################################
@@ -140,23 +159,23 @@ class F2D(Flexure):
 
     self.w = np.zeros(self.xw.shape)
     if self.Debug:
-      print "w = "
-      print self.w.shape
+      print("w = ")
+      print(self.w.shape)
     
     if self.latlon:
-      for i in range(len(self._x_local)):
+      for i in range(len(self.x)):
         # More efficient if we have created some 0-load points
         # (e.g., for where we want output)
         if self.q[i] != 0:
           # Create array of distances from point of load
-          r = self.greatCircleDistance(lat1=self._y_local[i], long1=self._x_local[i], lat2=self.yw, long2=self.xw, radius=self.PlanetaryRadius)
+          r = self.greatCircleDistance(lat1=self.y[i], long1=self.x[i], lat2=self.yw, long2=self.xw, radius=self.PlanetaryRadius)
           self.w += self.q[i] * self.coeff * kei(r/self.alpha)
           # Compute and sum deflection
           self.w += self.q[i] * self.coeff * kei(r/self.alpha)
     else:
-      for i in range(len(self._x_local)):
+      for i in range(len(self.x)):
         if self.q[i] != 0:
-          r = ( (self.xw - self._x_local[i])**2 + (self.yw - self._y_local[i])**2 )**.5
+          r = ( (self.xw - self.x[i])**2 + (self.yw - self.y[i])**2 )**.5
           self.w += self.q[i] * self.coeff * kei(r/self.alpha)
 
   ## FINITE DIFFERENCE
@@ -202,10 +221,10 @@ class F2D(Flexure):
     # Zeroth, start the timer and print the boundary conditions to the screen
     self.coeff_start_time = time.time()
     if self.Verbose:
-      print "Boundary condition, West:", self.BC_W, type(self.BC_W)
-      print "Boundary condition, East:", self.BC_E, type(self.BC_E)
-      print "Boundary condition, North:", self.BC_N, type(self.BC_N)
-      print "Boundary condition, South:", self.BC_S, type(self.BC_S)
+      print("Boundary condition, West:", self.BC_W, type(self.BC_W))
+      print("Boundary condition, East:", self.BC_E, type(self.BC_E))
+      print("Boundary condition, North:", self.BC_N, type(self.BC_N))
+      print("Boundary condition, South:", self.BC_S, type(self.BC_S))
     
     # First, set flexural rigidity boundary conditions to flesh out this padded
     # array
@@ -224,7 +243,7 @@ class F2D(Flexure):
     # Finally, compute the total time this process took    
     self.coeff_creation_time = time.time() - self.coeff_start_time
     if self.Quiet == False:
-      print 'Time to construct coefficient (operator) array [s]:', self.coeff_creation_time
+      print("Time to construct coefficient (operator) array [s]:", self.coeff_creation_time)
 
   def BC_Rigidity(self):
     """
@@ -1495,29 +1514,29 @@ class F2D(Flexure):
     if self.Debug:
       try:
         # Will fail if scalar
-        print 'self.Te', self.Te.shape
+        print("self.Te", self.Te.shape)
       except:
         pass
-      print 'self.qs', self.qs.shape
+      print("self.qs", self.qs.shape)
       self.calc_max_flexural_wavelength()
-      print 'maxFlexuralWavelength_ncells: (x, y):', self.maxFlexuralWavelength_ncells_x, self.maxFlexuralWavelength_ncells_y
+      print("maxFlexuralWavelength_ncells: (x, y):", self.maxFlexuralWavelength_ncells_x, self.maxFlexuralWavelength_ncells_y)
     
     q0vector = self.qs.reshape(-1, order='C')
     if self.Solver == "iterative" or self.Solver == "Iterative":
       if self.Debug:
-        print "Using generalized minimal residual method for iterative solution"
+        print("Using generalized minimal residual method for iterative solution")
       if self.Verbose:
-        print "Converging to a tolerance of", self.iterative_ConvergenceTolerance, "m between iterations"
+        print("Converging to a tolerance of", self.iterative_ConvergenceTolerance, "m between iterations")
       wvector = scipy.sparse.linalg.isolve.lgmres(self.coeff_matrix, q0vector)#, tol=1E-10)#,x0=woldvector)#,x0=wvector,tol=1E-15)    
       wvector = wvector[0] # Reach into tuple to get my array back
     else:
       if self.Solver == "direct" or self.Solver == "Direct":
         if self.Debug:
-          print "Using direct solution with UMFpack"
+          print("Using direct solution with UMFpack")
       else:
         if self.Quiet == False:
-          print "Solution type not understood:"
-          print "Defaulting to direct solution with UMFpack"
+          print("Solution type not understood:")
+          print("Defaulting to direct solution with UMFpack")
       wvector = scipy.sparse.linalg.spsolve(self.coeff_matrix, q0vector, use_umfpack=True)
 
     # Reshape into grid
